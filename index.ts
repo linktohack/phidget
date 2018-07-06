@@ -1,22 +1,18 @@
 import { Command } from './phidget';
+import 'rxjs/add/operator/toArray';
 
-// Command.start()
-//     .subscribe(it => {
-//         console.log('start next', it);
-//     }, it => {
-//         console.log('start error', it);
-//     }, () => {
-//         console.log('start completed');
-//     });
-
-
-setTimeout(() => {
-    Command.checkLeds()
-        .subscribe(it => {
-            console.log('checkLeds next', it);
-        }, it => {
-            console.log('checkLeds error', it);
-        }, () => {
-            console.log('checkLeds completed');
-        });
-}, 2000);
+Command.startWithOnlyOnePhidget()
+    .toArray()
+    .flatMap(() => Command.activeLed(1))
+    .flatMap(() => Command.activeLed(2))
+    .flatMap(() => Command.activeLed(3))
+    .flatMap(() => Command.activeLed(4))
+    .flatMap(() => Command.activeLed(5))
+    .flatMap(() => Command.activeLed(6))
+    .subscribe(it => {
+        console.log('next', it);
+    }, it => {
+        console.log('error', it);
+    }, () => {
+        console.log('completed');
+    });

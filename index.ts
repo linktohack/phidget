@@ -1,14 +1,14 @@
-import { Command } from './phidget';
-import 'rxjs/add/operator/toArray';
+import 'rxjs/add/operator/last';
+import { Phidget } from './phidget';
 
-Command.startWithOnlyOnePhidget()
-    .toArray()
-    .flatMap(() => Command.activeLed(1))
-    .flatMap(() => Command.activeLed(2))
-    .flatMap(() => Command.activeLed(3))
-    .flatMap(() => Command.activeLed(4))
-    .flatMap(() => Command.activeLed(5))
-    .flatMap(() => Command.activeLed(6))
+Phidget.startWithOnlyOnePhidget()
+    .last()
+    .flatMap(() => Phidget.activeKey(1))
+    .flatMap(() => Phidget.activeKey(2))
+    .flatMap(() => Phidget.activeKey(3))
+    .flatMap(() => Phidget.activeKey(4))
+    .flatMap(() => Phidget.activeKey(5))
+    .flatMap(() => Phidget.activeKey(6))
     .subscribe(it => {
         console.log('next', it);
     }, it => {

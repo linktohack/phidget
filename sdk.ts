@@ -20,30 +20,30 @@ import 'rxjs/add/operator/take';
 import debug from 'debug';
 
 export class Sdk {
-    childProcess: ChildProcess | undefined;
-    private childProcessRunning = false;
-    private childProcessResult = new Subject<string>();
+    process: ChildProcess | undefined;
+    private running = false;
+    private stdout$ = new Subject<string>();
 
     constructor(private command: string, private cwd?: string) {
         if (cwd) {
             process.chdir(cwd);
         }
 
-        this.childProcess = spawn(command);
+        this.process = spawn(command);
 
-        this.childProcess.stdout.on('data', data => {
+        this.process.stdout.on('data', data => {
             const d = debug('sdk:init');
             d('data: %s', data.toString());
             data.toString()
                 .split('\r').join('')
                 .split('\n')
                 .filter(it => it !== '')
-                .forEach(it => this.childProcessResult.next(it));
+                .forEach(it => this.stdout$.next(it));
         });
 
-        this.childProcess.on('close', () => {
-            this.childProcessRunning = false;
-            this.childProcess = undefined;
+        this.process.on('close', () => {
+            this.running = false;
+            this.process = undefined;
         });
     }
 
@@ -62,18 +62,18 @@ export class Sdk {
 
         const timeout$ = Observable.timer(0, timeout).take(2);
 
-        if (!this.childProcess) {
-            return Observable.throw('this.childProcess_not_started');
+        if (!this.process) {
+            return Observable.throw('process_not_started');
         }
 
-        if (this.childProcessRunning) {
+        if (this.running) {
             return Observable.throw('other_command_running');
         }
 
-        this.childProcessRunning = true;
+        this.running = true;
 
         const result$ = Observable.create((emitter: Subscriber<string>) => {
-            let subscription = Observable.combineLatest(this.childProcessResult, timeout$)
+            let subscription = Observable.combineLatest(this.stdout$, timeout$)
                 .subscribe(([it, out]: [string, number]) => {
                         d('timer, %d', out);
                         if (out) {
@@ -82,7 +82,7 @@ export class Sdk {
                         }
 
                         if (errorAsArray.indexOf(it) > -1 || completedAsArray.indexOf(it) > -1) {
-                            this.childProcessRunning = false;
+                            this.running = false;
                         }
 
                         if (nextAsArray.indexOf(it) > -1) {
@@ -108,12 +108,12 @@ export class Sdk {
 
         if (command) {
             d('sending command: %s', command);
-            this.childProcess.stdin.write(`${command}\n`);
+            this.process.stdin.write(`${command}\n`);
         }
 
         if (completedAsArray.length === 0) {
             if (!command) {
-                this.childProcessRunning = false;
+                this.running = false;
                 return Observable.throw('empty_command');
             }
 

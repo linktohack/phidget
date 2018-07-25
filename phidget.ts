@@ -1,75 +1,112 @@
 import { Sdk } from './sdk';
-
-let sdk = new Sdk('SDK_PHIDGETS.exe', './SDK');
-
-export class Phidget {
-    static start = () => sdk.execute(undefined,
-        'initializing_phidgets',
-        ['initialization_failed', 'no_nfcreader_detected'],
-        'initialization_ok');
+import { ChildProcess } from 'child_process';
 
 
-    static startWithOnlyOnePhidget = () =>
-        sdk.execute(undefined,
-            ['initializing_phidgets', 'initialization_failed'],
-            undefined,
-            'no_nfcreader_detected');
+export class Phidget extends Sdk {
 
+  constructor(public process: ChildProcess) {
+    super(process);
+  }
 
-    static activeKey = (key: number) =>
-        sdk.execute(`activeKey:${key}`,
-            undefined,
-            'error_while_activation',
-            'activation_ok',
-            2000);
+  start() {
+    return this.execute(undefined,
+      'initializing_phidgets',
+      ['initialization_failed', 'no_nfcreader_detected'],
+      'initialization_ok');
+  }
 
+  startWithFailed() {
+    return this.execute(undefined,
+      ['initializing_phidgets'],
+      undefined,
+      'initialization_failed');
+  }
 
-    static activeLed = (led: number) =>
-        sdk.execute(`activeLed:${led}`,
-            undefined,
-            'error_while_activation',
-            'activation_ok',
-            2000);
+  activeKey(key: number) {
+    return this.execute(`activeKey:${key}`,
+      undefined,
+      'error_while_activation',
+      'activation_ok',
+      2000);
+  }
 
-    static checkKeys = () =>
-        sdk.execute('checkKeys',
-            'checking_all_keys',
-            'error_while_activation',
-            'check_done',
-            10000);
+  activeLed(led: number) {
+    return this.execute(`activeLed:${led}`,
+      undefined,
+      'error_while_activation',
+      'activation_ok',
+      2000);
+  }
 
-    static checkLeds = () =>
-        sdk.execute('checkLeds',
-            ['checking_all_leds', 'error_while_activation'],
-            undefined,
-            'check_done',
-            10000);
+  checkKeys() {
+    return this.execute('checkKeys',
+      'checking_all_keys',
+      'error_while_activation',
+      'check_done',
+      10000);
+  }
 
-    static openFirstTrap = () =>
-        sdk.execute('openFirstTrap',
-            ['opening_first_trap', 'closing_first_trap'],
-            'cant_open_first_trap',
-            'first_trap_closed',
-            15000);
+  checkLeds() {
+    return this.execute('checkLeds',
+      ['checking_all_leds', 'error_while_activation'],
+      undefined,
+      'check_done',
+      10000);
+  }
 
-    static openSecondTrap = () =>
-        sdk.execute('openSecondTrap',
-            ['opening_second_trap', 'closing_second_trap'],
-            'cant_open_second_trap',
-            'second_trap_closed',
-            15000);
+  openFirstTrap() {
+    return this.execute('openFirstTrap',
+      ['opening_first_trap', 'closing_first_trap'],
+      'cant_open_first_trap',
+      'first_trap_closed',
+      30000);
+  }
 
-    static saveLogs = () =>
-        sdk.execute('saveLogs',
-            undefined,
-            undefined,
-            undefined,
-            100);
+  openSecondTrap() {
+    return this.execute('openSecondTrap',
+      ['opening_second_trap', 'closing_second_trap'],
+      'cant_open_second_trap',
+      'second_trap_closed',
+      30000);
+  }
 
-    static close = () =>
-        sdk.execute('close',
-            undefined,
-            undefined,
-            undefined,
-            100);
+  detectReaderUp(uid: string) {
+    return this.execute(undefined,
+      undefined,
+      undefined,
+      `readerUp:${uid}`,
+      12000);
+  }
+
+  detectReaderDown(uid: string) {
+    return this.execute(undefined,
+      undefined,
+      undefined,
+      `readerDown:${uid}`,
+      12000);
+  }
+
+  detectReaderKey() {
+    return this.executeWithRegExp(undefined,
+      /readerKeys:(.*)/,
+      undefined,
+      undefined);
+  }
+
+  saveLogs() {
+    return this.execute('saveLogs',
+      undefined,
+      undefined,
+      undefined,
+      100);
+  }
+
+  close() {
+    return this.execute('close',
+      undefined,
+      undefined,
+      undefined,
+      100);
+  }
+
 }
